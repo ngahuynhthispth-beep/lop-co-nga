@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dành cho Cô Giáo - Quản lý lớp học</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background-color: #fefce8;">
+    <div class="container fade-in">
+        <header>
+            <h1 style="background: linear-gradient(to right, #ea580c, #f59e0b); -webkit-background-clip: text;">
+                🍎 Trang Quản Lý của Cô
+            </h1>
+            <p style="color: var(--text-light)">Nơi khen thưởng những bạn nhỏ chăm chỉ!</p>
+        </header>
+
+        <section id="pending-section" class="card">
+            <h2 style="margin-bottom: 1rem;">Bài nộp đang chờ chấm</h2>
+            <div id="pending-list" class="wall">
+                <p style="text-align: center; grid-column: 1/-1; color: var(--text-light);">Đang chờ bài của các con...</p>
+            </div>
+        </section>
+
+        <!-- Modal hoặc Form Chấm Điểm (Dùng JS để hiện) -->
+        <div id="grading-modal" class="card fade-in" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; width: 90%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);">
+            <header style="margin-bottom: 1.5rem;">
+                <h3 id="grade-student-name">Chấm bài cho bạn</h3>
+                <p id="grade-info" style="font-size: 0.9rem; color: var(--text-light);"></p>
+            </header>
+            
+            <form id="grading-form">
+                <input type="hidden" id="grade-submission-id">
+                <div class="form-group">
+                    <label for="star-range">Tặng con bao nhiêu sao? (3-10): <span id="star-count" style="color: var(--accent); font-weight: bold; font-size: 1.2rem;">5</span></label>
+                    <input type="range" id="star-range" min="3" max="10" value="5" step="1" oninput="document.getElementById('star-count').innerText = this.value">
+                </div>
+                <div id="auto-comment-preview" class="comment" style="margin-bottom: 1.5rem; background: #fffbeb;">
+                    "Con đã biết tự học."
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn" style="background: var(--success); flex: 2;">💾 Lưu và Khen ngợi</button>
+                    <button type="button" class="btn" style="background: var(--danger); flex: 1;" onclick="closeModal()">Đóng</button>
+                </div>
+            </form>
+        </div>
+        <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;"></div>
+
+        <footer style="margin-top: 4rem; text-align: center; color: var(--text-light); font-size: 0.8rem;">
+            Chúc Cô có một ngày dạy học thật vui!
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Đặc biệt cho trang giáo viên: Theo dõi đổi sao để hiện lời phê trước khi lưu
+        const starRange = document.getElementById('star-range');
+        const autoPreview = document.getElementById('auto-comment-preview');
+        starRange.addEventListener('input', (e) => {
+            const s = parseInt(e.target.value);
+            if (s <= 5) autoPreview.innerText = '"Con cần cố gắng hơn."';
+            else if (s <= 7) autoPreview.innerText = '"Con đã biết tự học."';
+            else autoPreview.innerText = '"Con giỏi lắm, cần phát huy nhé!"';
+        });
+
+        function closeModal() {
+            document.getElementById('grading-modal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
