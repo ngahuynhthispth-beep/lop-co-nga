@@ -9,4 +9,8 @@
 - H? th?ng n?p danh sách h?c sinh t? file `students.txt`.
 
 ### Changed
+<<<<<<< HEAD
 - C?p nh?t danh sách th?t 38 h?c sinh (Trung Quân - Tu?n Anh).
+=======
+- C?p nh?t danh sách th?t 38 h?c sinh (Trung Quân - Tu?n Anh).
+>>>>>>> 088ffd02b81eda318d52f5ce5c52792b13e7040b

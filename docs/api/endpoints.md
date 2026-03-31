@@ -22,4 +22,8 @@ H?c sinh n?p ?nh ho?c video.
 Cô ch?m di?m b?ng s? sao và thêm l?i phê (t? d?ng g?i ý).
 
 ### GET /api/pending
+<<<<<<< HEAD
 Danh sách bài t?p cô chua ch?m.
+=======
+Danh sách bài t?p cô chua ch?m.
+>>>>>>> 088ffd02b81eda318d52f5ce5c52792b13e7040b
