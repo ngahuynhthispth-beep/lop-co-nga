@@ -4,3 +4,5 @@ uploads/*
 data.db
 .env
 *.log
+.brain/
+plans/
