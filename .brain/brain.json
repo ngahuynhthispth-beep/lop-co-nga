@@ -1,0 +1,53 @@
+{
+  "meta": {
+    "schema_version": "1.1.0",
+    "awf_version": "3.3.0"
+  },
+  "project": {
+    "name": "CungConHocGioiLopCoH.Nga",
+    "type": "Web App",
+    "description": "Ứng dụng nộp và chấm bài tập bằng ngôi sao dành cho lớp học lên đến 38 học sinh.",
+    "status": "Implemented"
+  },
+  "tech_stack": {
+    "frontend": "HTML5, CSS3, Vanilla JavaScript",
+    "backend": "Node.js (Express)",
+    "database": "SQLite",
+    "storage": "Local uploads/ folder"
+  },
+  "database_schema": {
+    "summary": "Lưu thông tin 38 học sinh thật và các bài nộp (ảnh/video) kèm điểm sao và lời phê.",
+    "tables": [
+      {
+        "name": "students",
+        "columns": ["id", "name", "total_stars"],
+        "description": "Danh sách học sinh thật được nạp từ file students.txt."
+      },
+      {
+        "name": "submissions",
+        "columns": ["id", "student_id", "type", "file_path", "stars", "comment", "created_at"],
+        "description": "Các bài nộp và kết quả chấm điểm của cô."
+      }
+    ],
+    "relationships_explained": "Mỗi bạn nhỏ có thể nộp nhiều bài tập khác nhau."
+  },
+  "api_endpoints": [
+    { "path": "/api/students", "method": "GET", "explained": "Lấy danh sách tên 38 bạn học sinh." },
+    { "path": "/api/upload", "method": "POST", "explained": "Gửi bài tập (Ảnh hoặc Video)." },
+    { "path": "/api/grade", "method": "POST", "explained": "Cung cấp số sao và lời khen tự động." },
+    { "path": "/api/wall", "method": "GET", "explained": "Hiển thị các bài đã chấm lên bảng tin lớp." },
+    { "path": "/api/pending", "method": "GET", "explained": "Danh sách bài đang chờ cô chấm." }
+  ],
+  "business_rules": [
+    "Học sinh tự chọn tên mình từ danh sách để nộp bài.",
+    "Thang điểm 3-10 sao kèm lời phê tương ứng theo mốc (Cố gắng/Tự học/Giỏi).",
+    "Hệ thống tự động nạp học sinh từ file students.txt khi khởi tạo."
+  ],
+  "features": [
+    "Đăng nhập nhanh theo tên",
+    "Nộp bài đa phương tiện (Ảnh/Video)",
+    "Chấm điểm thông minh với lời phê mẫu",
+    "Bảng tin vinh danh lớp học",
+    "Hệ thống nạp danh sách học sinh tùy chỉnh"
+  ]
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cùng Con Học Giỏi - Lớp Cô H.Nga</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container fade-in">
+        <header>
+            <h1>🌟 Cùng Con Học Giỏi</h1>
+            <p style="color: var(--text-light)">Nơi nộp bài và khoe thành tích của chúng mình!</p>
+        </header>
+
+        <section id="leaderboard-section" style="margin-bottom: 3rem; display: none;">
+            <h2 style="margin-bottom: 1rem; color: var(--accent);">🏆 Bảng vàng vinh danh</h2>
+            <div id="leaderboard" class="leaderboard">
+                <!-- Nội dung Bảng Vàng sẽ được tải bằng JS -->
+            </div>
+        </section>
+
+        <section id="upload-section" class="card">
+            <h2 style="margin-bottom: 1rem;">Nộp bài tập</h2>
+            <form id="upload-form">
+                <div class="form-group">
+                    <label for="student-select">1. Chọn tên của con:</label>
+                    <select id="student-select" required>
+                        <option value="" disabled selected>-- Chọn tên từ danh sách --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="file-input">2. Chụp ảnh bài hoặc chọn video (Có thể chọn nhiều):</label>
+                    <input type="file" id="file-input" accept="image/*,video/*" multiple required>
+                </div>
+                <button type="submit" class="btn">🚀 Gửi bài ngay</button>
+            </form>
+            <p id="upload-status" style="margin-top: 1rem; text-align: center; font-weight: 600;"></p>
+        </section>
+
+        <section>
+            <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                🎈 Bảng tin lớp mình 
+            </h2>
+            <div id="class-wall" class="wall">
+                <!-- Nội dung sẽ được tải bằng JS -->
+                <p style="text-align: center; grid-column: 1/-1; color: var(--text-light);">Đang tải những bài tập đáng yêu...</p>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; text-align: center; color: var(--text-light); font-size: 0.8rem;">
+            © 2026 Lớp Cô H.Nga - Hệ thống quản lý học tập thông minh
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
