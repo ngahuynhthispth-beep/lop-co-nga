@@ -84,12 +84,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     const card = document.createElement('div');
                     card.className = 'submission fade-in';
                     
-                    const media = item.type === 'video' 
-                        ? `<video src="${item.file_path}" class="submission-media" controls></video>`
-                        : `<img src="${item.file_path}" class="submission-media">`;
+                    const paths = item.file_paths.split(',');
+                    let mediaHtml = '<div class="submission-gallery">';
+                    
+                    paths.forEach(path => {
+                        if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
+                            mediaHtml += `<video src="${path}" class="submission-media" controls></video>`;
+                        } else {
+                            mediaHtml += `<img src="${path}" class="submission-media">`;
+                        }
+                    });
+                    mediaHtml += '</div>';
 
                     card.innerHTML = `
-                        ${media}
+                        ${mediaHtml}
                         <div class="submission-info">
                             <span class="student-name">${item.student_name}</span>
                             <div class="stars">${'⭐'.repeat(item.stars)}</div>
@@ -118,15 +126,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'submission fade-in';
-                    const media = item.type === 'video' 
-                        ? `<video src="${item.file_path}" class="submission-media" style="height: 120px"></video>`
-                        : `<img src="${item.file_path}" class="submission-media" style="height: 120px">`;
+                    
+                    const paths = item.file_paths.split(',');
+                    let mediaPreview = '<div class="submission-gallery preview">';
+                    paths.forEach(path => {
+                        if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
+                            mediaPreview += `<video src="${path}" class="submission-media" style="height: 80px"></video>`;
+                        } else {
+                            mediaPreview += `<img src="${path}" class="submission-media" style="height: 80px">`;
+                        }
+                    });
+                    mediaPreview += '</div>';
 
                     card.innerHTML = `
-                        ${media}
+                        ${mediaPreview}
                         <div class="submission-info">
                             <span class="student-name">${item.student_name}</span>
-                            <div class="badge">${item.type === 'video' ? '📽️ Video' : '🖼️ Ảnh'}</div>
+                            <div class="badge">${paths.length} file nộp</div>
                             <button class="btn" style="margin-top: 1rem; padding: 0.4rem; font-size: 0.9rem;" onclick="openGradeModal(${item.id}, '${item.student_name}')">✏️ Chấm Điểm</button>
                         </div>
                     `;

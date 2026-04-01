@@ -31,6 +31,7 @@ app.get('/api/students', (req, res) => {
 });
 
 // API: Nộp bài (Học sinh) - Cho phép nhiều file
+// API: Nộp bài (Học sinh) - Cho phép nhiều file
 app.post('/api/upload', upload.array('files', 10), (req, res) => {
     const { student_id } = req.body;
     const files = req.files;
@@ -39,22 +40,15 @@ app.post('/api/upload', upload.array('files', 10), (req, res) => {
         return res.status(400).json({ error: "Thiếu thông tin nộp bài hoặc chưa chọn tệp." });
     }
 
-    const query = "INSERT INTO submissions (student_id, type, file_path) VALUES (?, ?, ?)";
+    const filePaths = files.map(file => file.path).join(',');
+    const type = files[0].mimetype.includes('video') ? 'video' : 'image';
     
-    // Sử dụng Promise.all để đợi tất cả các lệnh insert hoàn thành
-    const promises = files.map(file => {
-        const type = file.mimetype.includes('video') ? 'video' : 'image';
-        return new Promise((resolve, reject) => {
-            db.run(query, [student_id, type, file.path], function(err) {
-                if (err) reject(err);
-                else resolve(this.lastID);
-            });
-        });
+    const insertQuery = "INSERT INTO submissions (student_id, type, file_paths) VALUES (?, ?, ?)";
+    
+    db.run(insertQuery, [student_id, type, filePaths], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: `Đã nộp bài tập (${files.length} file) thành công!` });
     });
-
-    Promise.all(promises)
-        .then(() => res.json({ message: `Đã nộp thành công ${files.length} tệp!` }))
-        .catch(err => res.status(500).json({ error: err.message }));
 });
 
 // API: Chấm bài (Giáo viên)
@@ -83,15 +77,16 @@ app.post('/api/grade', (req, res) => {
 });
 
 // API: Bảng tin lớp học (Bài đã chấm)
+// API: Bảng tin lớp học (Bài đã chấm)
 app.get('/api/wall', (req, res) => {
-    const query = `
-        SELECT s.id, s.file_path, s.type, s.stars, s.comment, s.created_at, st.name as student_name 
+    const wallQuery = `
+        SELECT s.id, s.file_paths, s.type, s.stars, s.comment, s.created_at, st.name as student_name 
         FROM submissions s
         JOIN students st ON s.student_id = st.id
         WHERE s.stars IS NOT NULL
         ORDER BY s.created_at DESC
     `;
-    db.all(query, [], (err, rows) => {
+    db.all(wallQuery, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
     });
@@ -100,7 +95,7 @@ app.get('/api/wall', (req, res) => {
 // API: Bài chưa chấm (Dành cho giáo viên)
 app.get('/api/pending', (req, res) => {
     const query = `
-        SELECT s.id, s.file_path, s.type, st.name as student_name, s.created_at
+        SELECT s.id, s.file_paths, s.type, st.name as student_name, s.created_at
         FROM submissions s
         JOIN students st ON s.student_id = st.id
         WHERE s.stars IS NULL
