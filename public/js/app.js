@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const uploadForm = document.getElementById('upload-form');
     if (uploadForm) {
-        uploadForm.addEventListener('submit', (e) => {
+        uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const studentId = document.getElementById('student-select').value;
             const fileInput = document.getElementById('file-input');
@@ -43,11 +43,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('student_id', studentId);
             
-            for (let i = 0; i < fileInput.files.length; i++) {
-                formData.append('files', fileInput.files[i]);
-            }
+            status.innerText = `⚡ Đang tối ưu hóa ${fileInput.files.length} bài của con...`;
+            status.style.color = "var(--accent)";
 
-            status.innerText = `⏳ Đang gửi ${fileInput.files.length} bài của con lên lớp...`;
+            // Xử lý nén ảnh song song
+            const processPromises = Array.from(fileInput.files).map(async (file) => {
+                if (file.type.startsWith('image/')) {
+                    try {
+                        const compressedBlob = await compressImage(file);
+                        formData.append('files', compressedBlob, file.name);
+                    } catch (err) {
+                        console.error("Lỗi nén ảnh, gửi bản gốc:", err);
+                        formData.append('files', file);
+                    }
+                } else {
+                    formData.append('files', file); // Giữ nguyên Video hoặc file khác
+                }
+            });
+
+            await Promise.all(processPromises);
+
+            status.innerText = `⏳ Đang gửi bài lên lớp cho Cô...`;
             status.style.color = "var(--primary)";
 
             fetch('/api/upload', {
@@ -65,6 +81,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 status.innerText = "❌ Lỗi khi gửi bài: " + err.message;
                 status.style.color = "var(--danger)";
             });
+        });
+    }
+
+    // --- HELPER: Nén ảnh thông minh ---
+    function compressImage(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1280;
+                    const MAX_HEIGHT = 1280;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Xuất ra Blob với chất lượng 0.7 (giảm 70-90% dung lượng)
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', 0.7);
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
         });
     }
 
