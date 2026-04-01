@@ -147,10 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     let mediaHtml = '<div class="submission-gallery">';
                     
                     paths.forEach(path => {
+                        if (!path) return;
+                        const src = path.startsWith('/') ? path : '/' + path;
                         if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
-                            mediaHtml += `<video src="${path}" class="submission-media" controls></video>`;
+                            mediaHtml += `<video src="${src}" class="submission-media" controls></video>`;
                         } else {
-                            mediaHtml += `<img src="${path}" class="submission-media">`;
+                            mediaHtml += `<img src="${src}" class="submission-media">`;
                         }
                     });
                     mediaHtml += '</div>';
@@ -189,10 +191,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const paths = item.file_paths.split(',');
                     let mediaPreview = '<div class="submission-gallery preview">';
                     paths.forEach(path => {
+                        if (!path) return;
+                        const src = path.startsWith('/') ? path : '/' + path;
                         if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
-                            mediaPreview += `<video src="${path}" class="submission-media" style="height: 80px"></video>`;
+                            mediaPreview += `<video src="${src}" class="submission-media" style="height: 80px"></video>`;
                         } else {
-                            mediaPreview += `<img src="${path}" class="submission-media" style="height: 80px">`;
+                            mediaPreview += `<img src="${src}" class="submission-media" style="height: 80px">`;
                         }
                     });
                     mediaPreview += '</div>';

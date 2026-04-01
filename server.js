@@ -40,7 +40,7 @@ app.post('/api/upload', upload.array('files', 10), (req, res) => {
         return res.status(400).json({ error: "Thiếu thông tin nộp bài hoặc chưa chọn tệp." });
     }
 
-    const filePaths = files.map(file => file.path).join(',');
+    const filePaths = files.map(file => file.path.replace(/\\/g, '/')).join(',');
     const type = files[0].mimetype.includes('video') ? 'video' : 'image';
     
     const insertQuery = "INSERT INTO submissions (student_id, type, file_paths) VALUES (?, ?, ?)";
@@ -80,7 +80,7 @@ app.post('/api/grade', (req, res) => {
 // API: Bảng tin lớp học (Bài đã chấm)
 app.get('/api/wall', (req, res) => {
     const wallQuery = `
-        SELECT s.id, s.file_paths, s.type, s.stars, s.comment, s.created_at, st.name as student_name 
+        SELECT s.id, COALESCE(s.file_paths, s.file_path) as file_paths, s.type, s.stars, s.comment, s.created_at, st.name as student_name 
         FROM submissions s
         JOIN students st ON s.student_id = st.id
         WHERE s.stars IS NOT NULL
@@ -95,7 +95,7 @@ app.get('/api/wall', (req, res) => {
 // API: Bài chưa chấm (Dành cho giáo viên)
 app.get('/api/pending', (req, res) => {
     const query = `
-        SELECT s.id, s.file_paths, s.type, st.name as student_name, s.created_at
+        SELECT s.id, COALESCE(s.file_paths, s.file_path) as file_paths, s.type, st.name as student_name, s.created_at
         FROM submissions s
         JOIN students st ON s.student_id = st.id
         WHERE s.stars IS NULL
