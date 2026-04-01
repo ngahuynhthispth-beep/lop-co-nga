@@ -40,47 +40,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('student_id', studentId);
+            const files = Array.from(fileInput.files);
+            const urls = [];
             
-            status.innerText = `⚡ Đang tối ưu hóa ${fileInput.files.length} bài của con...`;
+            status.innerText = `⚡ Đang chuẩn bị ${files.length} bài của con...`;
             status.style.color = "var(--accent)";
 
-            // Xử lý nén ảnh song song
-            const processPromises = Array.from(fileInput.files).map(async (file) => {
-                if (file.type.startsWith('image/')) {
-                    try {
-                        const compressedBlob = await compressImage(file);
-                        formData.append('files', compressedBlob, file.name);
-                    } catch (err) {
-                        console.error("Lỗi nén ảnh, gửi bản gốc:", err);
-                        formData.append('files', file);
+            // Hàm upload từng file trực tiếp lên Cloudinary (Unsigned)
+            const uploadToCloudinary = (file, index) => {
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', 'ml_default'); // Mặc định trên Cloudinary
+                    formData.append('cloud_name', 'dald3w5pi');
+
+                    xhr.open('POST', `https://api.cloudinary.com/v1_1/dald3w5pi/upload`, true);
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            status.innerText = `🚀 Đang gửi bài ${index + 1}/${files.length}: ${percent}%... Cô vui lòng không đóng trang nhé!`;
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            const response = JSON.parse(xhr.responseText);
+                            resolve(response.secure_url);
+                        } else {
+                            reject(new Error("Lỗi Cloudinary: " + xhr.statusText));
+                        }
+                    };
+
+                    xhr.onerror = () => reject(new Error("Lỗi kết nối mạng."));
+                    xhr.send(formData);
+                });
+            };
+
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    let fileToUpload = files[i];
+                    if (fileToUpload.type.startsWith('image/')) {
+                        status.innerText = `✨ Đang nén ảnh ${i + 1}/${files.length}...`;
+                        fileToUpload = await compressImage(fileToUpload);
                     }
-                } else {
-                    formData.append('files', file); // Giữ nguyên Video hoặc file khác
+                    const url = await uploadToCloudinary(fileToUpload, i);
+                    urls.push(url);
                 }
-            });
 
-            await Promise.all(processPromises);
-
-            status.innerText = `⏳ Đang gửi bài lên lớp cho Cô...`;
-            status.style.color = "var(--primary)";
-
-            fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                status.innerText = "✅ Gửi bài thành công! Đang chờ Cô chấm nhé.";
+                status.innerText = `✅ Đã lưu xong ${files.length} bài lên Đám mây! Đang hoàn tất...`;
+                
+                // Gửi Link về server để lưu vào sổ điểm
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        student_id: studentId, 
+                        urls: urls.join(',')
+                    })
+                });
+                
+                const result = await response.json();
+                status.innerText = "🌟 Gửi bài tuyệt vời! Đang chờ Cô vinh danh nhé.";
                 status.style.color = "var(--success)";
                 uploadForm.reset();
-                setTimeout(() => { status.innerText = ""; }, 3000);
-            })
-            .catch(err => {
-                status.innerText = "❌ Lỗi khi gửi bài: " + err.message;
+                setTimeout(() => { status.innerText = ""; }, 5000);
+                loadWall(); // Tải lại bảng tin
+            } catch (err) {
+                console.error(err);
+                status.innerText = "❌ Lỗi: " + err.message + ". Cô rà soát mục Upload Preset (Unsigned) trên Cloudinary nhé!";
                 status.style.color = "var(--danger)";
-            });
+            }
         });
     }
 
@@ -148,9 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     paths.forEach(path => {
                         if (!path) return;
-                        const src = path.startsWith('/') ? path : '/' + path;
+                        const src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
                         if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
-                            mediaHtml += `<video src="${src}" class="submission-media" controls></video>`;
+                            mediaHtml += `<video src="${src}" class="submission-media" controls playsinline webkit-playsinline preload="metadata"></video>`;
                         } else {
                             mediaHtml += `<img src="${src}" class="submission-media">`;
                         }
@@ -192,9 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     let mediaPreview = '<div class="submission-gallery preview">';
                     paths.forEach(path => {
                         if (!path) return;
-                        const src = path.startsWith('/') ? path : '/' + path;
+                        const src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
                         if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
-                            mediaPreview += `<video src="${src}" class="submission-media" style="height: 80px"></video>`;
+                            mediaPreview += `<video src="${src}" class="submission-media" style="height: 80px" controls playsinline webkit-playsinline preload="metadata"></video>`;
                         } else {
                             mediaPreview += `<img src="${src}" class="submission-media" style="height: 80px">`;
                         }

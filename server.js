@@ -32,22 +32,21 @@ app.get('/api/students', (req, res) => {
 
 // API: Nộp bài (Học sinh) - Cho phép nhiều file
 // API: Nộp bài (Học sinh) - Cho phép nhiều file
-app.post('/api/upload', upload.array('files', 10), (req, res) => {
-    const { student_id } = req.body;
-    const files = req.files;
+// API: Nộp bài (Học sinh) - Nhận Link từ Đám mây
+app.post('/api/upload', (req, res) => {
+    const { student_id, urls } = req.body;
 
-    if (!student_id || !files || files.length === 0) {
-        return res.status(400).json({ error: "Thiếu thông tin nộp bài hoặc chưa chọn tệp." });
+    if (!student_id || !urls) {
+        return res.status(400).json({ error: "Thiếu thông tin nộp bài hoặc Link bài tập." });
     }
 
-    const filePaths = files.map(file => file.path.replace(/\\/g, '/')).join(',');
-    const type = files[0].mimetype.includes('video') ? 'video' : 'image';
+    const type = urls.toLowerCase().match(/\.(mp4|webm|ogg|mov)/) ? 'video' : 'image';
     
     const insertQuery = "INSERT INTO submissions (student_id, type, file_paths) VALUES (?, ?, ?)";
     
-    db.run(insertQuery, [student_id, type, filePaths], function(err) {
+    db.run(insertQuery, [student_id, type, urls], function(err) {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: `Đã nộp bài tập (${files.length} file) thành công!` });
+        res.json({ message: "Đã lưu bài tập lên hệ thống thành công!" });
     });
 });
 
