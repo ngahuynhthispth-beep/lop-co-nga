@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const xhr = new XMLHttpRequest();
                     const formData = new FormData();
                     formData.append('file', file);
-                    formData.append('upload_preset', 'ml_default'); 
+                    formData.append('upload_preset', 'u0v4sn9e'); 
                     formData.append('cloud_name', 'dald3w5pi');
 
                     xhr.open('POST', `https://api.cloudinary.com/v1_1/dald3w5pi/upload`, true);
@@ -71,7 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             const response = JSON.parse(xhr.responseText);
                             resolve(response.secure_url);
                         } else {
-                            reject(new Error("Lỗi Cloudinary: " + xhr.statusText));
+                            // Lấy chi tiết lỗi từ Cloudinary để báo cho Cô
+                            const errorDetail = JSON.parse(xhr.responseText);
+                            reject(new Error("Cloudinary báo: " + (errorDetail.error ? errorDetail.error.message : xhr.statusText)));
                         }
                     };
 
