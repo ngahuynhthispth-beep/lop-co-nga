@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const files = Array.from(fileInput.files);
             const urls = [];
+            const fileProgress = new Array(files.length).fill(0);
             
             status.innerText = `⚡ Đang chuẩn bị ${files.length} bài của con...`;
             status.style.color = "var(--accent)";
@@ -52,15 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     const xhr = new XMLHttpRequest();
                     const formData = new FormData();
                     formData.append('file', file);
-                    formData.append('upload_preset', 'ml_default'); // Mặc định trên Cloudinary
+                    formData.append('upload_preset', 'ml_default'); 
                     formData.append('cloud_name', 'dald3w5pi');
 
                     xhr.open('POST', `https://api.cloudinary.com/v1_1/dald3w5pi/upload`, true);
 
                     xhr.upload.onprogress = (e) => {
                         if (e.lengthComputable) {
-                            const percent = Math.round((e.loaded / e.total) * 100);
-                            status.innerText = `🚀 Đang gửi bài ${index + 1}/${files.length}: ${percent}%... Cô vui lòng không đóng trang nhé!`;
+                            fileProgress[index] = (e.loaded / e.total) * 100;
+                            const totalPercent = Math.round(fileProgress.reduce((a, b) => a + b, 0) / files.length);
+                            status.innerText = `🚀 Đang gửi bài: ${totalPercent}%... Cô vui lòng không đóng trang nhé!`;
                         }
                     };
 
@@ -79,16 +81,17 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                for (let i = 0; i < files.length; i++) {
-                    let fileToUpload = files[i];
-                    if (fileToUpload.type.startsWith('image/')) {
-                        status.innerText = `✨ Đang nén ảnh ${i + 1}/${files.length}...`;
-                        fileToUpload = await compressImage(fileToUpload);
-                    }
-                    const url = await uploadToCloudinary(fileToUpload, i);
-                    urls.push(url);
-                }
+                // Xử lý nén ảnh đồng thời trước khi gửi
+                const preparedFiles = await Promise.all(files.map(async (f) => {
+                    if (f.type.startsWith('image/')) return await compressImage(f);
+                    return f;
+                }));
 
+                status.innerText = `🚀 Đang bắt đầu gửi đồng thời ${files.length} bài...`;
+
+                // Gửi tất cả các tệp cùng lúc (SONG SONG)
+                const uploadedUrls = await Promise.all(preparedFiles.map((file, i) => uploadToCloudinary(file, i)));
+                
                 status.innerText = `✅ Đã lưu xong ${files.length} bài lên Đám mây! Đang hoàn tất...`;
                 
                 // Gửi Link về server để lưu vào sổ điểm
@@ -97,19 +100,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         student_id: studentId, 
-                        urls: urls.join(',')
+                        urls: uploadedUrls.join(',')
                     })
                 });
                 
                 const result = await response.json();
-                status.innerText = "🌟 Gửi bài tuyệt vời! Đang chờ Cô vinh danh nhé.";
+                status.innerText = "🌟 Gửi bài phi mã thành công! Đang chờ Cô vinh danh nhé.";
                 status.style.color = "var(--success)";
                 uploadForm.reset();
                 setTimeout(() => { status.innerText = ""; }, 5000);
-                loadWall(); // Tải lại bảng tin
+                loadWall(); 
             } catch (err) {
                 console.error(err);
-                status.innerText = "❌ Lỗi: " + err.message + ". Cô rà soát mục Upload Preset (Unsigned) trên Cloudinary nhé!";
+                status.innerText = "❌ Lỗi: " + err.message;
                 status.style.color = "var(--danger)";
             }
         });
@@ -179,7 +182,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     paths.forEach(path => {
                         if (!path) return;
-                        const src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
+                        let src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
+                        if (src.includes('cloudinary.com')) {
+                            src = src.replace('/upload/', '/upload/f_auto,q_auto/');
+                        }
                         if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
                             mediaHtml += `<video src="${src}" class="submission-media" controls playsinline webkit-playsinline preload="metadata"></video>`;
                         } else {
@@ -223,7 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     let mediaPreview = '<div class="submission-gallery preview">';
                     paths.forEach(path => {
                         if (!path) return;
-                        const src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
+                        let src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
+                        if (src.includes('cloudinary.com')) {
+                            src = src.replace('/upload/', '/upload/f_auto,q_auto/');
+                        }
                         if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
                             mediaPreview += `<video src="${src}" class="submission-media" style="height: 80px" controls playsinline webkit-playsinline preload="metadata"></video>`;
                         } else {

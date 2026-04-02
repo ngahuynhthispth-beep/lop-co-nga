@@ -117,4 +117,53 @@ app.get('/api/leaderboard', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server chạy tại: http://localhost:${PORT}`);
+    // Chạy dọn dẹp lần đầu khi khởi động
+    cleanupOldSubmissions();
 });
+
+// --- HỆ THỐNG TỰ ĐỘNG DỌN DẸP (CLEANUP) ---
+function cleanupOldSubmissions() {
+    console.log("🧹 Đang kiểm tra và dọn dẹp bài tập cũ (> 24h)...");
+    
+    // Tính toán thời điểm cách đây 24 giờ
+    const boxDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
+    // 1. Tìm các bài nộp cũ để xóa tệp tin vật lý trước
+    const findOldQuery = "SELECT file_paths FROM submissions WHERE created_at < ?";
+    
+    db.all(findOldQuery, [boxDate], (err, rows) => {
+        if (err) return console.error("Lỗi tìm bài cũ:", err.message);
+        
+        rows.forEach(row => {
+            if (row.file_paths) {
+                const paths = row.file_paths.split(',');
+                paths.forEach(filePath => {
+                    // Chỉ xóa nếu là tệp cục bộ (bắt đầu bằng uploads/)
+                    if (filePath.startsWith('uploads/')) {
+                        const fullPath = path.join(__dirname, filePath);
+                        if (fs.existsSync(fullPath)) {
+                            try {
+                                fs.unlinkSync(fullPath);
+                                console.log(`🗑️ Đã xóa tệp: ${filePath}`);
+                            } catch (e) {
+                                console.error(`❌ Không thể xóa tệp ${filePath}:`, e.message);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        // 2. Xóa bản ghi trong Database
+        const deleteQuery = "DELETE FROM submissions WHERE created_at < ?";
+        db.run(deleteQuery, [boxDate], function(err) {
+            if (err) return console.error("Lỗi xóa DB:", err.message);
+            if (this.changes > 0) {
+                console.log(`✅ Đã dọn dẹp xong ${this.changes} bài tập cũ.`);
+            }
+        });
+    });
+}
+
+// Chạy dọn dẹp định kỳ mỗi 1 tiếng (3600000 ms)
+setInterval(cleanupOldSubmissions, 3600000);
