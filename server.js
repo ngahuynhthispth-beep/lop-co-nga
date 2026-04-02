@@ -37,6 +37,7 @@ app.post('/api/upload', (req, res) => {
     const { student_id, urls } = req.body;
 
     if (!student_id || !urls) {
+        console.warn("⚠️ Nộp bài thất bại: Thiếu student_id hoặc urls", req.body);
         return res.status(400).json({ error: "Thiếu thông tin nộp bài hoặc Link bài tập." });
     }
 
@@ -45,7 +46,11 @@ app.post('/api/upload', (req, res) => {
     const insertQuery = "INSERT INTO submissions (student_id, type, file_paths) VALUES (?, ?, ?)";
     
     db.run(insertQuery, [student_id, type, urls], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            console.error("❌ Lỗi INSERT bài tập:", err.message);
+            return res.status(500).json({ error: err.message });
+        }
+        console.log(`✅ Đã nhận bài nộp từ StudentID: ${student_id}`);
         res.json({ message: "Đã lưu bài tập lên hệ thống thành công!" });
     });
 });
@@ -79,7 +84,7 @@ app.post('/api/grade', (req, res) => {
 // API: Bảng tin lớp học (Bài đã chấm)
 app.get('/api/wall', (req, res) => {
     const wallQuery = `
-        SELECT s.id, COALESCE(s.file_paths, s.file_path) as file_paths, s.type, s.stars, s.comment, s.created_at, st.name as student_name 
+        SELECT s.id, s.file_paths, s.type, s.stars, s.comment, s.created_at, st.name as student_name 
         FROM submissions s
         JOIN students st ON s.student_id = st.id
         WHERE s.stars IS NOT NULL
@@ -94,7 +99,7 @@ app.get('/api/wall', (req, res) => {
 // API: Bài chưa chấm (Dành cho giáo viên)
 app.get('/api/pending', (req, res) => {
     const query = `
-        SELECT s.id, COALESCE(s.file_paths, s.file_path) as file_paths, s.type, st.name as student_name, s.created_at
+        SELECT s.id, s.file_paths, s.type, st.name as student_name, s.created_at
         FROM submissions s
         JOIN students st ON s.student_id = st.id
         WHERE s.stars IS NULL
@@ -125,8 +130,12 @@ app.listen(PORT, () => {
 function cleanupOldSubmissions() {
     console.log("🧹 Đang kiểm tra và dọn dẹp bài tập cũ (> 24h)...");
     
-    // Tính toán thời điểm cách đây 24 giờ
-    const boxDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // Tính toán thời điểm cách đây 24 giờ (định dạng YYYY-MM-DD HH:MM:SS để khớp SQLite)
+    const now = new Date();
+    const boxDate = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+        .toISOString()
+        .replace('T', ' ')
+        .slice(0, 19);
     
     // 1. Tìm các bài nộp cũ để xóa tệp tin vật lý trước
     const findOldQuery = "SELECT file_paths FROM submissions WHERE created_at < ?";

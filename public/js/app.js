@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const isTeacher = window.location.pathname.includes('teacher.html');
+    const isTeacher = window.location.pathname.includes('teacher.html') || window.location.pathname.endsWith('/teacher');
     
     if (isTeacher) {
         loadPending();
@@ -106,6 +106,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 });
                 
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Không thể lưu bài vào máy chủ.");
+                }
+
                 const result = await response.json();
                 status.innerText = "🌟 Gửi bài phi mã thành công! Đang chờ Cô vinh danh nhé.";
                 status.style.color = "var(--success)";
@@ -207,6 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                     wall.appendChild(card);
                 });
+            })
+            .catch(err => {
+                console.error("Lỗi tải bảng tin:", err);
+                wall.innerHTML = '<p style="text-align: center; color: var(--danger);">⚠️ Lỗi tải dữ liệu. Cô thử tải lại trang nhé!</p>';
             });
     }
 
@@ -253,6 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     `;
                     list.appendChild(card);
                 });
+            })
+            .catch(err => {
+                console.error("Lỗi tải bài chưa chấm:", err);
+                list.innerHTML = '<p style="text-align: center; color: var(--danger);">⚠️ Lỗi tải bài từ máy chủ. Cô kiểm tra kết nối mạng nhé!</p>';
             });
     }
 
