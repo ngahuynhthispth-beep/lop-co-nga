@@ -66,27 +66,23 @@ app.post('/api/grade', (req, res) => {
     else if (stars > 5 && stars <= 7) comment = "Con đã biết tự học.";
     else if (stars > 7 && stars <= 10) comment = "Con giỏi lắm, cần phát huy nhé!";
 
-    // Xử lý từng ID (SQL IN không hỗ trợ tốt cập nhật tổng sao từng bước, nên lặp qua)
-    const promises = targetIds.map(targetId => {
-        return new Promise((resolve, reject) => {
-            const query = "UPDATE submissions SET stars = ?, comment = ? WHERE id = ?";
-            db.run(query, [stars, comment, targetId], function(err) {
-                if (err) return reject(err);
-                
-                // Cập nhật tổng sao cho học sinh (Ví dụ đơn giản: cộng dồn)
-                db.get("SELECT student_id FROM submissions WHERE id = ?", [targetId], (err, row) => {
-                    if (row) {
-                        db.run("UPDATE students SET total_stars = total_stars + ? WHERE id = ?", [stars, row.student_id]);
-                    }
-                    resolve();
+    // 1. Cập nhật tất cả các bản ghi submissions trong nhóm
+    const updateSubmissionsQuery = "UPDATE submissions SET stars = ?, comment = ? WHERE id IN (" + targetIds.map(() => "?").join(",") + ")";
+    
+    db.run(updateSubmissionsQuery, [stars, comment, ...targetIds], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        
+        // 2. Chỉ cộng sao cho học sinh 1 LẦN duy nhất cho cả nhóm bài này
+        db.get("SELECT student_id FROM submissions WHERE id = ?", [targetIds[0]], (err, row) => {
+            if (row) {
+                db.run("UPDATE students SET total_stars = total_stars + ? WHERE id = ?", [stars, row.student_id], (err) => {
+                    if (err) console.error("Lỗi cập nhật tổng sao:", err.message);
                 });
-            });
+            }
         });
-    });
 
-    Promise.all(promises)
-        .then(() => res.json({ message: "Chấm bài thành công!", stars, comment }))
-        .catch(err => res.status(500).json({ error: err.message }));
+        res.json({ message: "Chấm xong " + targetIds.length + " bài!", stars, comment });
+    });
 });
 
 // API: Bảng tin lớp học (Bài đã chấm)
