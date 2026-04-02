@@ -190,13 +190,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     paths.forEach(path => {
                         if (!path) return;
                         let src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
+                        const isVideo = path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/);
+                        
                         if (src.includes('cloudinary.com')) {
-                            src = src.replace('/upload/', '/upload/f_auto,q_auto/');
+                            if (isVideo) {
+                                // Cho Video: Sử dụng vc_auto để tự động chọn codec tương thích nhất
+                                src = src.replace('/upload/', '/upload/vc_auto,q_auto/');
+                            } else {
+                                // Cho Ảnh: Dùng f_auto
+                                src = src.replace('/upload/', '/upload/f_auto,q_auto/');
+                            }
                         }
-                        if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
-                            mediaHtml += `<video src="${src}" class="submission-media" controls playsinline webkit-playsinline preload="metadata"></video>`;
+
+                        if (isVideo) {
+                            // Thêm poster (ảnh xem trước) cho video từ chính nó
+                            const poster = src.replace(/\.[^/.]+$/, ".jpg");
+                            mediaHtml += `
+                                <video src="${src}" poster="${poster}" class="submission-media" 
+                                    controls playsinline webkit-playsinline preload="metadata">
+                                </video>`;
                         } else {
-                            mediaHtml += `<img src="${src}" class="submission-media">`;
+                            mediaHtml += `<img src="${src}" class="submission-media" loading="lazy">`;
                         }
                     });
                     mediaHtml += '</div>';
@@ -232,22 +246,44 @@ document.addEventListener('DOMContentLoaded', () => {
                     list.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: var(--text-light);">🎁 Hôm nay các con nộp bài ngoan lắm, Cô đã chấm hết rồi!</p>';
                     return;
                 }
+                // Gom nhóm theo Học sinh
+                const grouped = {};
                 data.forEach(item => {
+                    if (!grouped[item.student_name]) {
+                        grouped[item.student_name] = {
+                            name: item.student_name,
+                            ids: [],
+                            files: []
+                        };
+                    }
+                    grouped[item.student_name].ids.push(item.id);
+                    const paths = item.file_paths.split(',');
+                    paths.forEach(p => {
+                        if (p) grouped[item.student_name].files.push(p);
+                    });
+                });
+
+                Object.values(grouped).forEach(group => {
                     const card = document.createElement('div');
                     card.className = 'submission fade-in';
                     
-                    const paths = item.file_paths.split(',');
                     let mediaPreview = '<div class="submission-gallery preview">';
-                    paths.forEach(path => {
-                        if (!path) return;
+                    group.files.forEach(path => {
                         let src = path.startsWith('http') ? path : (path.startsWith('/') ? path : '/' + path);
+                        const isVideo = path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/);
+                        
                         if (src.includes('cloudinary.com')) {
-                            src = src.replace('/upload/', '/upload/f_auto,q_auto/');
+                            if (isVideo) {
+                                src = src.replace('/upload/', '/upload/vc_auto,q_auto/');
+                            } else {
+                                src = src.replace('/upload/', '/upload/f_auto,q_auto,w_200/');
+                            }
                         }
-                        if (path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/)) {
-                            mediaPreview += `<video src="${src}" class="submission-media" style="height: 80px" controls playsinline webkit-playsinline preload="metadata"></video>`;
+                        
+                        if (isVideo) {
+                            mediaPreview += `<video src="${src}" class="submission-media" style="height: 120px" controls playsinline webkit-playsinline></video>`;
                         } else {
-                            mediaPreview += `<img src="${src}" class="submission-media" style="height: 80px">`;
+                            mediaPreview += `<img src="${src}" class="submission-media" style="height: 120px">`;
                         }
                     });
                     mediaPreview += '</div>';
@@ -255,9 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     card.innerHTML = `
                         ${mediaPreview}
                         <div class="submission-info">
-                            <span class="student-name">${item.student_name}</span>
-                            <div class="badge">${paths.length} file nộp</div>
-                            <button class="btn" style="margin-top: 1rem; padding: 0.4rem; font-size: 0.9rem;" onclick="openGradeModal(${item.id}, '${item.student_name}')">✏️ Chấm Điểm</button>
+                            <h3 class="student-name" style="color: var(--accent); margin-bottom: 0.5rem">${group.name}</h3>
+                            <div class="badge">${group.files.length} bài nộp đang chờ</div>
+                            <button class="btn" style="margin-top: 1rem; width: 100%;" onclick="openGradeModal('${group.ids.join(',')}', '${group.name}')">✏️ Chấm Điểm Nhóm Này</button>
                         </div>
                     `;
                     list.appendChild(card);
@@ -281,17 +317,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gradingForm) {
         gradingForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const id = document.getElementById('grade-submission-id').value;
+            const idStr = document.getElementById('grade-submission-id').value;
+            const ids = idStr.split(',').map(n => parseInt(n));
             const stars = document.getElementById('star-range').value;
 
             fetch('/api/grade', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: parseInt(id), stars: parseInt(stars) })
+                body: JSON.stringify({ ids: ids, stars: parseInt(stars) })
             })
             .then(res => res.json())
             .then(data => {
-                alert("Đã chấm xong cho bạn nhỏ: " + stars + " sao!");
+                alert("Đã chấm xong cho " + ids.length + " bài của con: " + stars + " sao!");
                 document.getElementById('grading-modal').style.display = 'none';
                 document.getElementById('overlay').style.display = 'none';
                 loadPending();

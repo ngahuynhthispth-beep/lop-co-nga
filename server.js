@@ -57,27 +57,36 @@ app.post('/api/upload', (req, res) => {
 
 // API: Chấm bài (Giáo viên)
 app.post('/api/grade', (req, res) => {
-    const { id, stars } = req.body;
+    const { id, ids, stars } = req.body;
+    const targetIds = ids || [id]; // Hỗ trợ cả 1 ID hoặc 1 mảng ID
     let comment = "";
-
-    // Logic lời phê tự động
+    
+    // ... lời phê và xử lý SQL cho mảng ID
     if (stars >= 3 && stars <= 5) comment = "Con cần cố gắng hơn.";
     else if (stars > 5 && stars <= 7) comment = "Con đã biết tự học.";
     else if (stars > 7 && stars <= 10) comment = "Con giỏi lắm, cần phát huy nhé!";
 
-    const query = "UPDATE submissions SET stars = ?, comment = ? WHERE id = ?";
-    db.run(query, [stars, comment, id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        
-        // Cập nhật tổng sao cho học sinh (Ví dụ đơn giản: cộng dồn)
-        db.get("SELECT student_id FROM submissions WHERE id = ?", [id], (err, row) => {
-            if (row) {
-                db.run("UPDATE students SET total_stars = total_stars + ? WHERE id = ?", [stars, row.student_id]);
-            }
+    // Xử lý từng ID (SQL IN không hỗ trợ tốt cập nhật tổng sao từng bước, nên lặp qua)
+    const promises = targetIds.map(targetId => {
+        return new Promise((resolve, reject) => {
+            const query = "UPDATE submissions SET stars = ?, comment = ? WHERE id = ?";
+            db.run(query, [stars, comment, targetId], function(err) {
+                if (err) return reject(err);
+                
+                // Cập nhật tổng sao cho học sinh (Ví dụ đơn giản: cộng dồn)
+                db.get("SELECT student_id FROM submissions WHERE id = ?", [targetId], (err, row) => {
+                    if (row) {
+                        db.run("UPDATE students SET total_stars = total_stars + ? WHERE id = ?", [stars, row.student_id]);
+                    }
+                    resolve();
+                });
+            });
         });
-
-        res.json({ message: "Chấm bài thành công!", stars, comment });
     });
+
+    Promise.all(promises)
+        .then(() => res.json({ message: "Chấm bài thành công!", stars, comment }))
+        .catch(err => res.status(500).json({ error: err.message }));
 });
 
 // API: Bảng tin lớp học (Bài đã chấm)
