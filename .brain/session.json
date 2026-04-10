@@ -1,29 +1,33 @@
 {
-  "updated_at": "2026-03-31T14:18:00Z",
+  "updated_at": "2026-04-09T08:50:00Z",
   "working_on": {
-    "feature": "Hoàn thiện danh sách 38 học sinh",
+    "feature": "Nâng cấp Bảng vàng lên Top 15",
     "status": "Hoàn thành",
-    "files": ["students.txt", "lib/database.js"],
-    "notes": "Đã nạp thành công tên của 38 bạn nhỏ (Trung Quân - Tuấn Anh)."
+    "files": ["server.js", "CHANGELOG.md", "docs/api/endpoints.md", ".brain/brain.json"],
+    "notes": "Đã điều chỉnh API và giao diện để hiển thị Top 15 học sinh xuất sắc nhất theo yêu cầu của giáo viên."
   },
   "recent_changes": [
     {
-      "timestamp": "2026-03-31T13:45:00Z",
+      "timestamp": "2026-04-09T08:45:00Z",
       "type": "feature",
-      "description": "Thêm tính năng nạp danh sách học sinh tùy chỉnh thông qua file students.txt.",
-      "files": ["students.txt", "lib/database.js"]
+      "description": "Chỉnh sửa bảng vinh danh (Leaderboard) từ Top 10 lên Top 15.",
+      "files": ["server.js", "CHANGELOG.md", "docs/api/endpoints.md"]
     },
     {
-      "timestamp": "2026-03-31T14:00:00Z",
-      "type": "data",
-      "description": "Cập nhật danh sách 38 học sinh thật cho dự án.",
-      "files": ["students.txt"]
+      "timestamp": "2026-04-02T19:00:00Z",
+      "type": "bugfix",
+      "description": "Sửa lỗi không lưu bài tập vào DB và không hiển thị trên dashboard của cô.",
+      "files": ["server.js", "lib/database.js"]
     }
   ],
   "decisions_made": [
     {
-      "decision": "Dùng file .txt để nhập tên",
-      "reason": "Giúp cô giáo dễ dàng dán danh sách từ file Excel hay Word vào."
+      "decision": "Mở rộng số lượng vinh danh",
+      "reason": "Giáo viên muốn khuyến khích thêm nhiều học sinh hơn (từ 10 lên 15 bạn)."
+    },
+    {
+      "decision": "Sử dụng Database Wrapper tự chế",
+      "reason": "Để code chạy được cả Offline (SQLite) và Online (PostgreSQL trên Render) mà không cần sửa code API."
     }
   ]
 }

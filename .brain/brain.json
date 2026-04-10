@@ -6,48 +6,50 @@
   "project": {
     "name": "CungConHocGioiLopCoH.Nga",
     "type": "Web App",
-    "description": "Ứng dụng nộp và chấm bài tập bằng ngôi sao dành cho lớp học lên đến 38 học sinh.",
-    "status": "Implemented"
+    "description": "Ứng dụng nộp và chấm bài tập thông minh, hỗ trợ 38 học sinh, tích hợp bảng vàng và tự động dọn dẹp.",
+    "status": "Production Ready"
   },
   "tech_stack": {
     "frontend": "HTML5, CSS3, Vanilla JavaScript",
     "backend": "Node.js (Express)",
-    "database": "SQLite",
-    "storage": "Local uploads/ folder"
+    "database": "SQLite (Local) / PostgreSQL (Cloud - Render)",
+    "storage": "Local uploads/ & Cloud URLs"
   },
   "database_schema": {
-    "summary": "Lưu thông tin 38 học sinh thật và các bài nộp (ảnh/video) kèm điểm sao và lời phê.",
+    "summary": "Hệ thống lưu trữ linh hoạt hỗ trợ cả SQLite và Postgres thông qua wrapper tùy chỉnh.",
     "tables": [
       {
         "name": "students",
         "columns": ["id", "name", "total_stars"],
-        "description": "Danh sách học sinh thật được nạp từ file students.txt."
+        "description": "Danh sách học sinh, tự động nạp từ students.txt nếu trống."
       },
       {
         "name": "submissions",
-        "columns": ["id", "student_id", "type", "file_path", "stars", "comment", "created_at"],
-        "description": "Các bài nộp và kết quả chấm điểm của cô."
+        "columns": ["id", "student_id", "type", "file_paths", "stars", "comment", "created_at"],
+        "description": "Bài nộp của học sinh. 'file_paths' lưu danh sách link bài tập."
       }
     ],
-    "relationships_explained": "Mỗi bạn nhỏ có thể nộp nhiều bài tập khác nhau."
+    "relationships_explained": "Một học sinh có thể có nhiều bài nộp. Dữ liệu tự động dọn dẹp sau 24h để tiết kiệm dung lượng."
   },
   "api_endpoints": [
-    { "path": "/api/students", "method": "GET", "explained": "Lấy danh sách tên 38 bạn học sinh." },
-    { "path": "/api/upload", "method": "POST", "explained": "Gửi bài tập (Ảnh hoặc Video)." },
-    { "path": "/api/grade", "method": "POST", "explained": "Cung cấp số sao và lời khen tự động." },
-    { "path": "/api/wall", "method": "GET", "explained": "Hiển thị các bài đã chấm lên bảng tin lớp." },
-    { "path": "/api/pending", "method": "GET", "explained": "Danh sách bài đang chờ cô chấm." }
+    { "path": "/api/students", "method": "GET", "explained": "Lấy danh sách học sinh." },
+    { "path": "/api/upload", "method": "POST", "explained": "Nộp bài tập (hỗ trợ nhiều link/file)." },
+    { "path": "/api/grade", "method": "POST", "explained": "Chấm điểm và gửi lời phê." },
+    { "path": "/api/wall", "method": "GET", "explained": "Hiển thị các bài đã chấm (Bảng tin)." },
+    { "path": "/api/pending", "method": "GET", "explained": "Danh sách bài chờ chấm." },
+    { "path": "/api/leaderboard", "method": "GET", "explained": "Bảng vàng - Top 15 học sinh nhiều sao nhất." }
   ],
   "business_rules": [
-    "Học sinh tự chọn tên mình từ danh sách để nộp bài.",
-    "Thang điểm 3-10 sao kèm lời phê tương ứng theo mốc (Cố gắng/Tự học/Giỏi).",
-    "Hệ thống tự động nạp học sinh từ file students.txt khi khởi tạo."
+    "Học sinh tự chọn tên để nộp bài.",
+    "Hệ thống tự động dọn dẹp bài tập cũ sau 24 giờ.",
+    "Hỗ trợ nộp nhiều file cùng lúc bằng cách lưu chuỗi paths.",
+    "Tự động chuyển đổi câu lệnh SQL giữa SQLite và Postgres."
   ],
   "features": [
     "Đăng nhập nhanh theo tên",
-    "Nộp bài đa phương tiện (Ảnh/Video)",
-    "Chấm điểm thông minh với lời phê mẫu",
-    "Bảng tin vinh danh lớp học",
-    "Hệ thống nạp danh sách học sinh tùy chỉnh"
+    "Nộp bài đa phương tiện (Link/Ảnh/Video)",
+    "Bảng vàng vinh danh học sinh xuất sắc",
+    "Tự động dọn dẹp bộ nhớ định kỳ",
+    "Triển khai 24/7 trên Render với PostgreSQL"
   ]
 }
