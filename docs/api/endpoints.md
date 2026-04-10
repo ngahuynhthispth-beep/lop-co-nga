@@ -1,29 +1,29 @@
 # API Documentation
-
-Ng�y c?p nh?t: 31-03-2026
-Base URL: http://localhost:3000
+Ngày cập nhật: 02-04-2026
+Base URL: http://localhost:3000 (Local) | https://lop-co-nga.onrender.com (Production)
 
 ---
 
-## ?? H?c sinh & L?p h?c
+## 🏫 Học sinh & Lớp học
 ### GET /api/students
-L?y danh s�ch 38 b?n nh?.
+Lấy danh sách 38 bạn nhỏ, bao gồm tên và tổng số sao.
+
+### GET /api/leaderboard
+Bảng vàng - Top 15 học sinh có số sao cao nhất lớp.
 
 ### GET /api/wall
-L?y c�c b�i d� du?c c� ch?m di?m d? hi?n l�n b?ng tin.
+Lấy các bài đã được cô chấm điểm để hiện lên bảng tin.
 
 ---
 
-## ?? Ch?m & N?p b�i
+## 📝 Chấm & Nộp bài
 ### POST /api/upload
-H?c sinh n?p ?nh ho?c video.
+Học sinh nộp bài tập (Ảnh hoặc Video).
+- Body: {"student_id": 1, "urls": "link1.jpg"}
 
 ### POST /api/grade
-C� ch?m di?m b?ng s? sao v� th�m l?i ph� (t? d?ng g?i �).
+Cô chấm điểm bằng số sao và thêm lời phê (tự động gợi ý).
+- Body: {"id": submission_id, "stars": 10} hoặc {"ids": [id1, id2], "stars": 10}
 
 ### GET /api/pending
-<<<<<<< HEAD
-Danh s�ch b�i t?p c� chua ch?m.
-=======
-Danh s�ch b�i t?p c� chua ch?m.
->>>>>>> 088ffd02b81eda318d52f5ce5c52792b13e7040b
+Danh sách bài tập cô chưa chấm.

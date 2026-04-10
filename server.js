@@ -116,9 +116,9 @@ app.get('/api/pending', (req, res) => {
     });
 });
 
-// API: Bảng vàng (Top 10 học sinh nhiều sao nhất)
+// API: Bảng vàng (Top 15 học sinh nhiều sao nhất)
 app.get('/api/leaderboard', (req, res) => {
-    const query = "SELECT id, name, total_stars FROM students WHERE total_stars > 0 ORDER BY total_stars DESC LIMIT 10";
+    const query = "SELECT id, name, total_stars FROM students WHERE total_stars > 0 ORDER BY total_stars DESC LIMIT 15";
     db.all(query, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(rows);
